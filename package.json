@@ -1,0 +1,14 @@
+{
+  "name": "instaclone",
+  "version": "1.0.0",
+  "description": "Instagram-style social app with zero dependencies (Node 22.13+/24, node:sqlite)",
+  "private": true,
+  "main": "server.js",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js && node --experimental-vm-modules --test test/ui.test.mjs",
+    "test:api": "node --test test/*.test.js",
+    "test:ui": "node --experimental-vm-modules --test test/ui.test.mjs"
+  }
+}

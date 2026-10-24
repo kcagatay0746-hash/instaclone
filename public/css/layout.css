@@ -1,0 +1,100 @@
+.app-shell { display: flex; min-height: 100vh; }
+
+/* ---------- sidebar (desktop) ---------- */
+.sidebar {
+  position: fixed; inset: 0 auto 0 0; width: var(--nav-w);
+  border-right: 1px solid var(--border); background: var(--bg-elev);
+  padding: 22px 14px 18px; display: flex; flex-direction: column; z-index: 60;
+}
+.brand { display: flex; align-items: center; gap: 10px; padding: 6px 10px 26px; }
+.brand img { width: 30px; height: 30px; border-radius: 9px; }
+.brand .wordmark {
+  font-size: 26px; font-weight: 800; letter-spacing: -.04em;
+  font-family: "Segoe UI", var(--sans);
+}
+.brand .wordmark span {
+  background: linear-gradient(60deg, #c13584, #ee2a7b 40%, #f9ce34);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.side-nav { display: flex; flex-direction: column; gap: 4px; }
+.side-link {
+  display: flex; align-items: center; gap: 14px; padding: 11px 12px; border-radius: 11px;
+  font-size: 15px; font-weight: 500; color: var(--text); cursor: pointer;
+  border: 0; background: none; width: 100%; text-align: left; transition: background .15s ease;
+}
+.side-link:hover { background: var(--bg-soft); }
+.side-link.active { font-weight: 750; }
+.side-link.active .ic { transform: scale(1.06); }
+.side-link .label { flex: 1; }
+.side-link .avatar { margin: -4px 0; }
+.side-foot { margin-top: auto; display: flex; flex-direction: column; gap: 2px; }
+.side-user { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 11px; cursor: pointer; }
+.side-user:hover { background: var(--bg-soft); }
+.side-user .who { min-width: 0; }
+.side-user .who b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.side-user .who span { display: block; font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- main ---------- */
+.main {
+  flex: 1; margin-left: var(--nav-w); min-width: 0;
+  padding: 26px 24px 40px; display: flex; justify-content: center;
+}
+.page { width: 100%; max-width: calc(var(--feed-w) + var(--rail-w) + 36px); display: flex; gap: 36px; justify-content: center; }
+.page.narrow { max-width: 935px; }
+.page.wide { max-width: 975px; }
+.column { width: 100%; max-width: var(--feed-w); min-width: 0; }
+.column.wide { max-width: 975px; }
+.rail { width: var(--rail-w); flex: none; display: flex; flex-direction: column; gap: 18px; position: sticky; top: 26px; align-self: flex-start; }
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+.page-head h1 { font-size: 21px; }
+
+/* mobile top bar + bottom nav */
+.topbar, .bottom-nav { display: none; }
+
+@media (max-width: 1180px) {
+  .rail { display: none; }
+  .page { max-width: 640px; }
+}
+@media (max-width: 860px) {
+  :root { --nav-w: 74px; }
+  .sidebar { padding: 18px 10px; align-items: center; }
+  .brand { padding: 4px 0 22px; }
+  .brand .wordmark, .side-link .label, .side-link .badge, .side-user .who, .side-user .icon-btn { display: none; }
+  .side-link { justify-content: center; padding: 12px; }
+  .side-user { justify-content: center; padding: 8px; }
+}
+@media (max-width: 700px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; padding: 54px 0 76px; }
+  .column { max-width: 100%; }
+  .page { max-width: 100%; gap: 0; }
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    position: fixed; top: 0; left: 0; right: 0; height: 54px; padding: 0 12px;
+    background: var(--bg-elev); border-bottom: 1px solid var(--border); z-index: 70;
+  }
+  .topbar .brand { padding: 0; }
+  .topbar .brand img { width: 26px; height: 26px; }
+  .topbar .brand .wordmark { font-size: 21px; }
+  .topbar-actions { display: flex; align-items: center; gap: 2px; }
+  .bottom-nav {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
+    background: var(--bg-elev); border-top: 1px solid var(--border);
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+  }
+  .bottom-nav .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: 0; color: var(--muted); font-size: 10.5px; cursor: pointer;
+    padding: 4px 0; border-radius: 10px; position: relative;
+  }
+  .bottom-nav .nav-item.active { color: var(--text); }
+  .bottom-nav .nav-item .badge { position: absolute; top: 0; right: calc(50% - 20px); }
+  .topbar, .main, .bottom-nav { transition: background .2s ease; }
+  .toasts { bottom: 84px; }
+}
+@media (min-width: 701px) {
+  .mobile-only { display: none !important; }
+}
+@media (max-width: 700px) {
+  .desktop-only { display: none !important; }
+}
