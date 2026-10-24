@@ -13,6 +13,35 @@ node server.js          # ya da: npm start
 
 İlk çalıştırmada `data/app.db` (SQLite) oluşur ve içi demo içerikle doldurulur.
 
+### Uygulama olarak çalıştır / kur
+
+Bu proje bir web sitesi değil, **kurulabilir bir uygulama** olarak da çalışır:
+
+**Masaüstü (kendi penceresi, tarayıcı sekmesi yok)**
+
+```bash
+npm run app
+```
+
+Sunucuyu başlatır ve Chrome/Edge/Brave varsa `--app` modunda ayrı bir uygulama
+penceresinde açar (kendi görev çubuğu simgesiyle). Tarayıcı bulunamazsa varsayılan
+tarayıcıya düşer.
+
+**Telefon / masaüstü kurulumu (PWA)**
+
+Uygulamayı açtıktan sonra:
+
+- **Chrome/Edge (masaüstü):** adres çubuğunun sağındaki **Yükle** (⊕) simgesine bas.
+- **Android Chrome:** menü → **Uygulamayı yükle / Ana ekrana ekle**.
+- **iPhone/iPad (Safari):** Paylaş → **Ana Ekrana Ekle**.
+
+Kurulduktan sonra ana ekranda kendi ikonuyla açılır, tam ekran (standalone) çalışır ve
+service worker sayesinde çevrimdışıyken de kabuk + son görüntülenen içerik açılır.
+
+> Not: Mağazaya yüklenecek gerçek bir `.exe` / `.apk` paketi için Electron veya Capacitor
+> gibi bir paketleyici gerekir; bu proje “hiçbir şey indirmeden” çalışsın diye PWA +
+> masaüstü başlatıcı yaklaşımını kullanır.
+
 **Demo hesapları** (şifre hepsi için `demo1234`):
 
 | kullanıcı | profil |
@@ -55,6 +84,10 @@ src/routes-*.js        API uç noktaları (auth, feed, posts, comments, users, s
 src/seed.js + seed-art.js   demo kullanıcılar, gönderiler, hikayeler, SVG görseller
 src/http-util.js       gövde okuma, dosya sunumu, MIME/CSP başlıkları
 public/index.html      SPA iskeleti
+public/manifest.webmanifest  PWA manifesti (kurulabilir uygulama)
+public/sw.js           service worker: uygulama kabuğu + çevrimdışı önbellek
+public/img/icon-*.png  uygulama ikonları (tools/make-icons.js ile üretilir)
+tools/launch-app.js    masaüstü başlatıcı (npm run app)
 public/css/*.css       tema değişkenleri, bileşenler, görünümler
 public/js/app.js       yönlendirici + oturum + canlı olaylar
 public/js/views/*.js   ekranlar: akış, keşfet, arama, profil, gönderi, mesajlar, ...

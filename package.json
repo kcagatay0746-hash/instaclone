@@ -7,6 +7,8 @@
   "engines": { "node": ">=22.13" },
   "scripts": {
     "start": "node server.js",
+    "app": "node tools/launch-app.js",
+    "icons": "node tools/make-icons.js",
     "test": "node --test test/*.test.js && node --experimental-vm-modules --test test/ui.test.mjs",
     "test:api": "node --test test/*.test.js",
     "test:ui": "node --experimental-vm-modules --test test/ui.test.mjs"

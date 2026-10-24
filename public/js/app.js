@@ -120,4 +120,11 @@ void logout;
 // Small debug handle (also used by the UI smoke tests).
 window.__insta = { openPost: (id) => import('./components/post-detail.js').then((m) => m.openPost(id)), state };
 
+// Make it installable: register the offline-capable service worker.
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => { /* offline mode is optional */ });
+  });
+}
+
 boot();

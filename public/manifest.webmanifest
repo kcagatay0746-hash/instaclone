@@ -1,0 +1,28 @@
+{
+  "name": "Instaclone",
+  "short_name": "Instaclone",
+  "description": "Fotoğraf paylaş, hikaye ekle, arkadaşlarınla sohbet et.",
+  "lang": "tr",
+  "dir": "ltr",
+  "start_url": "/#/feed",
+  "scope": "/",
+  "id": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["social", "photo", "lifestyle"],
+  "icons": [
+    { "src": "/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Ana Sayfa", "url": "/#/feed", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Keşfet", "url": "/#/explore", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Yeni Gönderi", "url": "/#/create", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Mesajlar", "url": "/#/messages", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
