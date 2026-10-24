@@ -1,0 +1,49 @@
+INSTACLONE — HIZLI KURULUM (TÜRKÇE)
+====================================
+
+1) BİLGİSAYARINDA NODE.JS KURULU OLMALI (sürüm 22.13 veya üstü).
+   Kontrol: terminalde/cmd'de  ->  node -v
+   Yoksa: https://nodejs.org  ->  LTS sürümünü indir ve kur.
+
+2) BU KLASÖRDE, İŞLETİM SİSTEMİNE GÖRE ŞU DOSYAYA ÇİFT TIKLA:
+
+   Windows .......... BASLAT-Windows.bat
+   macOS ............ BASLAT-Mac.command   (ilk seferde: sağ tık -> Aç)
+   Linux ............ BASLAT-Linux.sh      (gerekirse: chmod +x BASLAT-Linux.sh)
+
+   Bir terminal penceresi açılır ve "Instaclone hazır" yazar.
+   BU PENCEREYİ KAPATMA! Uygulama çalışırken açık kalmalı.
+
+3) TARAYICI OTOMATİK AÇILIR. Açılmazsa tarayıcıya şunu yaz:
+
+   http://localhost:3000
+
+4) GİRİŞ YAP:
+   Kullanıcı adı: ayse      (mehmet, zeynep, can, elif, deniz de olur)
+   Şifre:        demo1234
+
+   Yeni hesap da oluşturabilirsin.
+
+5) UYGULAMA GİBİ KURMAK İSTERSEN (isteğe bağlı):
+   - Chrome/Edge masaüstü: adres çubuğunun sağındaki "Yükle" (⊕) simgesine bas.
+   - Android Chrome: menü (⋮) -> "Uygulamayı yükle" / "Ana ekrana ekle".
+   - iPhone/iPad Safari: Paylaş -> "Ana Ekrana Ekle".
+
+6) KAPATMAK İÇİN:
+   Açılan terminal/sunucu penceresini kapat (veya Ctrl+C).
+
+ÖNEMLİ
+------
+- public/index.html dosyasına ÇİFT TIKLAMAYIN. Çalışmaz; çünkü uygulama
+  arka planda çalışan sunucuya (node server.js) ihtiyaç duyar.
+- Uygulama verileri bu klasördeki "data" klasöründe tutulur.
+  Her şeyi sıfırlamak için "data" klasörünü silip yeniden başlat.
+- Hiçbir paket indirmen gerekmez; harici kütüphane kullanılmıyor.
+
+TERMINALDEN ÇALIŞTIRMAK İSTERSEN
+--------------------------------
+   cd bu-klasör
+   node server.js
+   (tarayıcı: http://localhost:3000)
+
+   Uygulama penceresi olarak (Chrome/Edge varsa):  npm run app

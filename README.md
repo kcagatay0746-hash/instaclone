@@ -6,10 +6,27 @@ gerekmez: sunucu yalnızca Node.js'in yerleşik modüllerini (`node:http`, `node
 
 ## Hızlı başlangıç
 
+**En kolay yol — tek tıkla aç:** indirdiğin klasörde işletim sistemine göre şu dosyaya çift tıkla:
+
+| İşletim sistemi | Açılacak dosya |
+| --- | --- |
+| Windows | **`BASLAT-Windows.bat`** |
+| macOS | **`BASLAT-Mac.command`** (ilk seferde dosyaya **sağ tık → Aç**) |
+| Linux | **`BASLAT-Linux.sh`** (çift tık veya terminalde `./BASLAT-Linux.sh`) |
+
+Bu dosya sunucuyu başlatır ve tarayıcıyı otomatik olarak `http://localhost:3000` adresinde
+açar. Açılan terminal/sunucu penceresini kapatma; uygulamayı durdurmak için o pencereyi kapat
+(veya Ctrl+C).
+
+**Terminalden:**
+
 ```bash
 node server.js          # ya da: npm start
 # → http://localhost:3000
 ```
+
+> `public/index.html` dosyasına çift tıklayarak açmayın: uygulama API'si için sunucunun
+> çalışıyor olması gerekir. Her zaman yukarıdaki başlatıcıyı veya `node server.js` kullan.
 
 İlk çalıştırmada `data/app.db` (SQLite) oluşur ve içi demo içerikle doldurulur.
 
@@ -76,6 +93,9 @@ service worker sayesinde çevrimdışıyken de kabuk + son görüntülenen içer
 ## Yapı
 
 ```
+BASLAT-Windows.bat     Windows tek tık başlatıcı
+BASLAT-Mac.command     macOS tek tık başlatıcı
+BASLAT-Linux.sh        Linux başlatıcı
 server.js              HTTP sunucusu, yönlendirme, statik dosyalar, güvenlik başlıkları
 src/db.js              SQLite şeması (node:sqlite)
 src/core.js            ortak yardımcılar: yönlendirme kaydı, SSE, görsel kaydetme, bildirim
