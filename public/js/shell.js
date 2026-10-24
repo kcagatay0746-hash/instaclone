@@ -4,6 +4,7 @@ import { state, toggleTheme, logout } from './store.js';
 
 const NAV = [
   { path: '/feed', label: 'Ana Sayfa', icon: 'home' },
+  { path: '/reels', label: 'Reels', icon: 'play' },
   { path: '/explore', label: 'Keşfet', icon: 'compass' },
   { path: '/messages', label: 'Mesajlar', icon: 'message', badge: 'messages' },
   { path: '/notifications', label: 'Bildirimler', icon: 'bell', badge: 'notifications' },
@@ -67,7 +68,7 @@ export function renderShell() {
   const bottom = el('nav', { class: 'bottom-nav' },
     [
       { path: '/feed', iconName: 'home', label: 'Ana Sayfa' },
-      { path: '/explore', iconName: 'compass', label: 'Keşfet' },
+      { path: '/reels', iconName: 'play', label: 'Reels' },
       { path: '/create', iconName: 'plus', label: 'Oluştur' },
       { path: '/notifications', iconName: 'bell', label: 'Bildirimler', badge: 'notifications' },
       { path: `/u/${me.username}`, iconName: 'user', label: 'Profil', profile: true },

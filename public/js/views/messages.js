@@ -93,5 +93,12 @@ export async function messagesView(username) {
     void toast;
   });
 
-  return { node: wrap, wide: true, cleanup: () => { offIncoming(); } };
+  // call ended/declined rows are written into the thread by the server
+  const offRefresh = bus.on('dm:refresh', () => {
+    loadConvs();
+    const current = thread.current();
+    if (current) thread.open(current);
+  });
+
+  return { node: wrap, wide: true, cleanup: () => { offIncoming(); offRefresh(); } };
 }

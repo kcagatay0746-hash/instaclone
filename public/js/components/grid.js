@@ -1,6 +1,7 @@
 // Square thumbnail grid shared by profile, explore, tag and saved pages.
 import { el, icon, fmt } from '../ui.js';
 import { openPost } from './post-detail.js';
+import { playBadge } from './media.js';
 
 export function gridItem(post, onOpen = openPost) {
   return el('div', {
@@ -12,6 +13,7 @@ export function gridItem(post, onOpen = openPost) {
     onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(post.id); } },
   },
   el('img', { src: post.image, alt: post.caption || 'Gönderi', loading: 'lazy' }),
+  post.kind === 'video' ? el('span', { class: 'video-badge' }, playBadge()) : null,
   el('div', { class: 'over' },
     el('span', {}, icon('heartFill', 18), fmt.count(post.likes)),
     el('span', {}, icon('comment', 18), fmt.count(post.comments))));

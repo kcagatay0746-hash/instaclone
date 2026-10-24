@@ -112,6 +112,15 @@ export async function feedView() {
   }
 
   // desktop rail
+  const followBack = el('div', { class: 'rail-card hide' },
+    el('div', { class: 'head' }, el('h2', { text: 'Seni takip ediyor' })),
+    el('div', { class: 'rows' }));
+  API.followsMe().then(({ users }) => {
+    if (!users.length) return;
+    followBack.classList.remove('hide');
+    followBack.querySelector('.rows').append(...users.slice(0, 4).map((u) => followRow(u)));
+  }).catch(() => {});
+
   const rail = el('aside', { class: 'rail' },
     el('div', { class: 'rail-card' },
       el('div', { class: 'rail-me' },
@@ -120,6 +129,7 @@ export async function feedView() {
           el('a', { href: `#/u/${state.me.username}` }, el('b', { text: state.me.username })),
           el('span', { text: state.me.name })),
         el('button', { class: 'btn text sm', onclick: () => import('../store.js').then((s) => s.logout()) }, 'Çıkış'))),
+    followBack,
     suggestionsCard(),
     el('div', { class: 'rail-foot' },
       'Hakkında · Yardım · Gizlilik · Şartlar', el('br'), '© 2026 Instaclone — demo proje'));

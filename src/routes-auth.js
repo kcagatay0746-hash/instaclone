@@ -46,7 +46,7 @@ module.exports = function authRoutes(core) {
   }, { auth: false });
 
   route('POST', '/api/login', (ctx) => {
-    rateLimit(`login:${ctx.ip}`, 15, 10 * 60 * 1000);
+    rateLimit(`login:${ctx.ip}`, 30, 10 * 60 * 1000);
     const username = clampStr(ctx.body.username, 30);
     const password = typeof ctx.body.password === 'string' ? ctx.body.password : '';
     const user = q('SELECT * FROM users WHERE username = ?').get(username);

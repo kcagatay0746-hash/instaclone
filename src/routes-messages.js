@@ -15,7 +15,11 @@ module.exports = function messageRoutes(core) {
         const m = q('SELECT * FROM messages WHERE id = ?').get(c.mid);
         const u = q('SELECT * FROM users WHERE id = ?').get(c.other);
         const unread = q('SELECT COUNT(*) n FROM messages WHERE from_id = ? AND to_id = ? AND read = 0').get(c.other, me).n;
-        return { user: userCard(u), last: { text: m.text, created_at: m.created_at, mine: m.from_id === me }, unread };
+        return {
+          user: userCard(u),
+          last: { text: m.text, created_at: m.created_at, mine: m.from_id === me, kind: m.kind || 'text' },
+          unread,
+        };
       }),
     };
   });
@@ -31,7 +35,14 @@ module.exports = function messageRoutes(core) {
       ) ORDER BY id ASC`).all({ me, o: other.id });
     return {
       user: userCard(other),
-      messages: rows.map((m) => ({ id: m.id, text: m.text, created_at: m.created_at, mine: m.from_id === me })),
+      messages: rows.map((m) => ({
+        id: m.id,
+        text: m.text,
+        created_at: m.created_at,
+        mine: m.from_id === me,
+        kind: m.kind || 'text',
+        call_id: m.call_id || null,
+      })),
     };
   });
 

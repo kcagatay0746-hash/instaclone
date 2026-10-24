@@ -18,7 +18,7 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 const db = openDb(process.env.DB_PATH || path.join(DATA_DIR, 'app.db'));
 const core = createCore({ db, uploadDir: UPLOAD_DIR, now: Date.now });
 
-const PAGE_CSP = "default-src 'self'; img-src 'self' data: blob:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
+const PAGE_CSP = "default-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; style-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'";
 const OFF_CSP = "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox";
 
 const { authUser } = require('./src/routes-auth')(core);
@@ -29,7 +29,12 @@ require('./src/routes-users')(core);
 require('./src/routes-stories')(core);
 require('./src/routes-notifications')(core);
 require('./src/routes-messages')(core);
+require('./src/routes-calls')(core);
 const { routes } = core;
+
+// Video uploads are big; photos/SDP payloads stay small.
+const BIG_BODY = 40 * 1024 * 1024;
+const BIG_ROUTES = new Set(['/api/posts', '/api/stories']);
 
 async function handle(req, res) {
   const url = new URL(req.url, 'http://localhost');
@@ -67,7 +72,7 @@ async function handle(req, res) {
       const params = {};
       matched.r.keys.forEach((k, i) => { params[k] = matched.m[i + 1]; });
       if (params.id !== undefined && !/^\d+$/.test(params.id)) throw new HttpError(400, 'Geçersiz kimlik.');
-      const body = mutating ? await readBody(req) : {};
+      const body = mutating ? await readBody(req, BIG_ROUTES.has(url.pathname) ? BIG_BODY : 12 * 1024 * 1024) : {};
       const ctx = { req, res, ip, user, params, query: url.searchParams, body, status: 200 };
       const result = matched.r.handler(ctx);
       if (result === undefined) return; // streaming response (SSE)

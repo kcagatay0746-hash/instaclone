@@ -23,13 +23,31 @@ export const post = {
   recent: [comment],
 };
 
+export const videoPost = {
+  ...post,
+  id: 12,
+  kind: 'video',
+  video: '/uploads/v.mp4',
+  image: '/uploads/v.svg',
+  caption: 'Dans videosu #reels',
+  views: 5,
+  likes: 3,
+  comments: 0,
+  recent: [],
+};
+
 const routes = [
   [/^\/api\/me$/, () => ({ user: me, unreadNotifications: 2, unreadMessages: 1 })],
   [/^\/api\/feed/, () => ({ posts: [post], next: null })],
+  [/^\/api\/reels/, () => ({ posts: [videoPost, post], next: null })],
+  [/^\/api\/posts\/12\/view$/, () => ({ views: 6, counted: true })],
+  [/^\/api\/posts\/12$/, () => ({ post: videoPost })],
+  [/^\/api\/posts\/12\/comments$/, () => ({ comments: [] })],
   [/^\/api\/stories$/, () => ({
     groups: [{ user: other, stories: [{ id: 3, image: '/uploads/s.svg', created_at: Date.now(), seen: false }], all_seen: false }],
   })],
   [/^\/api\/suggestions$/, () => ({ users: [other] })],
+  [/^\/api\/people\/follows-me$/, () => ({ users: [{ ...other, follows_me: true }] })],
   [/^\/api\/explore/, () => ({ posts: [post], next: null })],
   [/^\/api\/saved$/, () => ({ posts: [post] })],
   [/^\/api\/users\/ayse$/, () => ({
@@ -51,8 +69,9 @@ const routes = [
   [/^\/api\/messages\/mehmet$/, () => ({
     user: other,
     messages: [
-      { id: 1, text: 'Selam', created_at: Date.now(), mine: false },
-      { id: 2, text: 'Merhaba!', created_at: Date.now(), mine: true },
+      { id: 1, text: 'Selam', created_at: Date.now(), mine: false, kind: 'text' },
+      { id: 2, text: 'Merhaba!', created_at: Date.now(), mine: true, kind: 'text' },
+      { id: 3, text: 'Sesli arama · 0:42', created_at: Date.now(), mine: true, kind: 'call', call_id: 7 },
     ],
   })],
   [/^\/api\/posts\/11$/, () => ({ post })],

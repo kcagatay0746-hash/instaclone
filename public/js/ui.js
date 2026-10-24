@@ -61,6 +61,9 @@ const ICONS = {
   link: '<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>',
   logout: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h9"/>',
   refresh: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/>',
+  phone: '<path d="M6.5 3.5 9 6 7.5 8.5a12 12 0 0 0 6 6L16 13l2.5 2.5v3a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 3.5 5.7 2 2 0 0 1 5.5 3.5h1Z"/>',
+  video: '<rect x="2" y="6" width="13" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
   bookmarkFill: '<path d="M6 3h12v18l-6-4.5L6 21V3Z" fill="currentColor"/>',
   heartFill: '<path d="M12 20.5S3.5 15 3.5 9.2A4.7 4.7 0 0 1 12 6a4.7 4.7 0 0 1 8.5 3.2C20.5 15 12 20.5 12 20.5Z" fill="currentColor"/>',
   verified: '<path d="m12 2 2.4 1.8 3-.2 1 2.8 2.4 1.8-1 2.8 1 2.9-2.4 1.7-1 2.9-3-.3L12 22l-2.4-1.8-3 .3-1-2.9-2.4-1.7 1-2.9-1-2.8L5.6 8.4l1-2.8 3 .2L12 2Z" fill="currentColor"/><path d="m8 12 2.5 2.5L16 9" stroke="#fff" stroke-width="1.8" fill="none"/>',
@@ -291,10 +294,45 @@ export function renderToDataUrl(img, { filter = 'normal', aspect = 1, zoom = 1, 
   ctx.fillStyle = '#000';
   ctx.fillRect(0, 0, width, height);
   if ('filter' in ctx) ctx.filter = cssFilter(filter);
-  const scale = Math.max(width / img.width, height / img.height) * zoom;
-  const dw = img.width * scale;
-  const dh = img.height * scale;
+  // works for both <img> and <video> sources
+  const iw = img.videoWidth || img.naturalWidth || img.width;
+  const ih = img.videoHeight || img.naturalHeight || img.height;
+  const scale = Math.max(width / iw, height / ih) * zoom;
+  const dw = iw * scale;
+  const dh = ih * scale;
   ctx.drawImage(img, (width - dw) / 2, (height - dh) / 2, dw, dh);
   return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+// Loads a video file, validates it and seeks to a frame we can use as poster.
+export async function loadVideoFile(file) {
+  if (!file || !file.type.startsWith('video/')) throw new Error('Lütfen bir video dosyası seçin.');
+  if (file.size > 25 * 1024 * 1024) throw new Error('Video en fazla 25MB olabilir.');
+  const url = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.src = url;
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+  await new Promise((resolve, reject) => {
+    video.addEventListener('loadedmetadata', resolve, { once: true });
+    video.addEventListener('error', () => reject(new Error('Video okunamadı. MP4 veya WebM dene.')), { once: true });
+  });
+  if (!video.duration || Number.isNaN(video.duration)) throw new Error('Videonun süresi okunamadı.');
+  if (video.duration > 120) throw new Error('Video en fazla 2 dakika olabilir.');
+  await new Promise((resolve) => {
+    video.addEventListener('seeked', resolve, { once: true });
+    video.currentTime = Math.min(0.5, video.duration / 3);
+  });
+  return video;
+}
+
+export function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Dosya okunamadı.'));
+    reader.readAsDataURL(file);
+  });
 }
 

@@ -29,7 +29,28 @@ INSTACLONE — HIZLI KURULUM (TÜRKÇE)
    - Android Chrome: menü (⋮) -> "Uygulamayı yükle" / "Ana ekrana ekle".
    - iPhone/iPad Safari: Paylaş -> "Ana Ekrana Ekle".
 
-6) KAPATMAK İÇİN:
+6) YENİ: REELS (VİDEO / TAM EKRAN İZLEME)
+   Alt menüdeki veya sol taraftaki "Reels" bölümüne git.
+   - Video izlemek için: yukarı/aşağı kaydır; görünen video otomatik oynar.
+   - Sağ üstteki "Sesi aç" düğmesiyle sesi açabilirsin.
+   - Kendi videonu yüklemek için: "Oluştur" -> dosya seç (MP4/WebM, en fazla 25MB,
+     2 dakika) -> "Videoyu paylaş". Kapak görseli videodan otomatik alınır.
+   - Fotoğraflar da Reels akışında tam ekran görünür.
+
+7) YENİ: SESLİ / GÖRÜNTÜLÜ ARAMA
+   Aramak için iki pencere gerekir (aynı bilgisayarda test etmek için):
+   - 1. pencere: ayse / demo1234 ile giriş yap.
+   - 2. pencere (gizli sekme veya başka tarayıcı): mehmet / demo1234 ile giriş yap.
+   - 1. pencerede Mesajlar -> mehmet -> üstteki telefon (sesli) veya kamera
+     (görüntülü) simgesine bas.
+   - 2. pencerede "Gelen arama" ekranı çıkar -> "Yanıtla".
+   - Görüşme sırasında mikrofonu/kamerayı kapatabilir, kırmızı düğmeyle bitirebilirsin.
+   - Bittiğinde arama kaydı sohbette görünür.
+
+   Not: Tarayıcı kamera/mikrofon izni ister -> "İzin ver" seç.
+   Arama özelliği http://localhost üzerinden çalışır (veya HTTPS).
+
+8) KAPATMAK İÇİN:
    Açılan terminal/sunucu penceresini kapat (veya Ctrl+C).
 
 ÖNEMLİ

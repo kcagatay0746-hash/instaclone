@@ -21,6 +21,7 @@
   ],
   "shortcuts": [
     { "name": "Ana Sayfa", "url": "/#/feed", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Reels", "url": "/#/reels", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
     { "name": "Keşfet", "url": "/#/explore", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
     { "name": "Yeni Gönderi", "url": "/#/create", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] },
     { "name": "Mesajlar", "url": "/#/messages", "icons": [{ "src": "/img/icon-192.png", "sizes": "192x192" }] }

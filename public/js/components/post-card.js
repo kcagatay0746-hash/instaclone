@@ -3,16 +3,19 @@ import { API } from '../api.js';
 import { el, icon, avatar, fmt, linkify, toast, bus, confirmDialog } from '../ui.js';
 import { state } from '../store.js';
 import { openMenu } from './menu.js';
+import { postMedia, viewCount } from './media.js';
 import { openPost } from './post-detail.js';
 
 export function postCard(post, { onDeleted } = {}) {
-  const mediaImg = el('img', { src: post.image, alt: post.caption || 'Gönderi', loading: 'lazy', draggable: 'false' });
+  const isVideo = post.kind === 'video' && !!post.video;
+  const mediaImg = postMedia(post);
   const burst = el('div', { class: 'heart-burst' }, icon('heartFill', 96));
   const likeBtn = el('button', { class: 'icon-btn', 'aria-label': 'Beğen' });
   const saveBtn = el('button', { class: 'icon-btn', 'aria-label': 'Kaydet' });
   const likesEl = el('div', { class: 'post-likes' });
   const commentsEl = el('div', { class: 'post-comments' });
   const timeEl = el('div', { class: 'post-time' });
+  const viewsEl = el('div', { class: 'post-views' });
   const input = el('input', { placeholder: 'Yorum ekle…', 'aria-label': 'Yorum ekle', maxlength: '1000' });
   const sendBtn = el('button', { class: 'btn', type: 'submit' }, 'Paylaş');
   const node = el('article', { class: 'card post', 'data-post-id': post.id });
@@ -20,6 +23,7 @@ export function postCard(post, { onDeleted } = {}) {
   const render = () => {
     likesEl.textContent = post.likes > 0 ? `${fmt.count(post.likes)} beğeni` : 'İlk beğenen sen ol';
     timeEl.textContent = fmt.time(post.created_at);
+    viewsEl.textContent = isVideo ? viewCount(post) : '';
     likeBtn.replaceChildren(icon(post.liked ? 'heartFill' : 'heart', 24));
     likeBtn.classList.toggle('liked', post.liked);
     likeBtn.setAttribute('aria-pressed', String(post.liked));
@@ -79,12 +83,20 @@ export function postCard(post, { onDeleted } = {}) {
     render();
   });
 
-  let lastTap = 0;
-  mediaImg.addEventListener('click', () => {
-    const now = Date.now();
-    if (now - lastTap < 320) toggleLike(true);
-    lastTap = now;
-  });
+  // Double-tap to like on photos (videos keep their native controls).
+  if (!isVideo) {
+    let lastTap = 0;
+    mediaImg.addEventListener('click', () => {
+      const now = Date.now();
+      if (now - lastTap < 320) toggleLike(true);
+      lastTap = now;
+    });
+  } else {
+    const markViewed = () => {
+      API.viewPost(post.id).then((r) => { post.views = r.views; viewsEl.textContent = viewCount(post); }).catch(() => {});
+    };
+    mediaImg.addEventListener('play', markViewed, { once: true });
+  }
 
   const form = el('form', {
     class: 'post-comment-form',
@@ -163,6 +175,7 @@ export function postCard(post, { onDeleted } = {}) {
       likesEl,
       post.caption ? el('div', { class: 'post-caption' }, el('b', { text: post.user.username }), linkify(post.caption)) : null,
       commentsEl,
+      viewsEl,
       timeEl),
     form);
 

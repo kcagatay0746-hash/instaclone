@@ -3,6 +3,7 @@ import { el, spinner, closeTopModal, bus, toast } from './ui.js';
 import { state, connectEvents, refreshSession, logout } from './store.js';
 import { renderShell, updateBadges } from './shell.js';
 import { authView } from './views/auth.js';
+import { initCalls } from './components/call.js';
 
 const app = document.getElementById('app');
 let cleanup = null;
@@ -10,6 +11,7 @@ let cleanup = null;
 const ROUTES = [
   { re: /^\/$/, load: () => import('./views/feed.js'), key: 'feedView' },
   { re: /^\/feed$/, load: () => import('./views/feed.js'), key: 'feedView' },
+  { re: /^\/reels$/, load: () => import('./views/reels.js'), key: 'reelsView' },
   { re: /^\/explore$/, load: () => import('./views/explore.js'), key: 'exploreView' },
   { re: /^\/search$/, load: () => import('./views/search.js'), key: 'searchView' },
   { re: /^\/create$/, load: () => import('./views/compose.js'), key: 'composeView' },
@@ -116,6 +118,8 @@ document.addEventListener('keydown', (e) => {
 
 void toast;
 void logout;
+
+initCalls();
 
 // Small debug handle (also used by the UI smoke tests).
 window.__insta = { openPost: (id) => import('./components/post-detail.js').then((m) => m.openPost(id)), state };

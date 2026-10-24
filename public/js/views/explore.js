@@ -1,14 +1,35 @@
 // Explore: ranked grid of posts from people you don't follow yet.
 import { API } from '../api.js';
-import { el, spinner, toast, emptyState } from '../ui.js';
+import { el, icon, spinner, toast, emptyState } from '../ui.js';
 import { gridItem } from '../components/grid.js';
+import { followRow } from '../components/user-row.js';
+
+async function peopleCard() {
+  const card = el('div', { class: 'card pad hide', style: { marginBottom: '16px' } });
+  try {
+    const [{ users: followBack }, { users: suggestions }] = await Promise.all([API.followsMe(), API.suggestions()]);
+    const people = [...followBack, ...suggestions.filter((s) => !followBack.some((f) => f.id === s.id))].slice(0, 5);
+    if (!people.length) return card;
+    card.classList.remove('hide');
+    card.append(
+      el('div', { class: 'section-title' },
+        el('h2', { text: 'Kişi ekle' }),
+        el('span', { class: 'muted small', text: 'takip et, akışında görünsün' })),
+      ...people.map((u) => followRow(u, { subtitle: u.name })));
+  } catch { /* suggestions are optional */ }
+  return card;
+}
 
 export async function exploreView() {
   const column = el('div', { class: 'column' });
   const grid = el('div', { class: 'grid' });
   const sentinel = el('div', { class: 'load-more' }, spinner());
   column.append(
-    el('div', { class: 'page-title-row' }, el('h1', { text: 'Keşfet' }), el('span', { class: 'count-pill', text: 'sana özel' })),
+    el('div', { class: 'page-title-row' },
+      el('h1', { text: 'Keşfet' }),
+      el('span', { class: 'count-pill', text: 'sana özel' }),
+      el('button', { class: 'btn ghost sm', onclick: () => import('../ui.js').then((u) => u.navigate('/search')) }, icon('search', 15), 'Kişi ara')),
+    peopleCard(),
     el('div', { class: 'card', style: { padding: '3px' } }, grid),
     sentinel);
 

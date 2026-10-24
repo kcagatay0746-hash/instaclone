@@ -2,9 +2,10 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
-const { HttpError, sniffImage } = require('./util');
+const { HttpError, sniffImage, sniffVideo } = require('./util');
 
 const MAX_IMAGE = 8 * 1024 * 1024;
+const MAX_VIDEO = 25 * 1024 * 1024;
 
 // Shared helpers + route registry used by every route module.
 function createCore({ db, uploadDir, now }) {
@@ -49,6 +50,19 @@ function createCore({ db, uploadDir, now }) {
     return name;
   }
 
+  function saveVideo(dataUrl) {
+    const m = /^data:video\/(mp4|webm|quicktime|ogg);base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
+    if (!m) throw new HttpError(400, 'Geçerli bir video gerekli (mp4 veya webm).');
+    const buf = Buffer.from(m[2], 'base64');
+    if (buf.length > MAX_VIDEO) throw new HttpError(413, 'Video çok büyük (en fazla 25MB).');
+    const ext = sniffVideo(buf);
+    if (!ext) throw new HttpError(400, 'Video dosyası geçersiz.');
+    if (!['mp4', 'webm', 'mov', 'ogg'].includes(ext)) throw new HttpError(400, 'Desteklenmeyen video biçimi.');
+    const name = `${crypto.randomBytes(16).toString('hex')}.${ext}`;
+    fs.writeFileSync(path.join(uploadDir, name), buf);
+    return name;
+  }
+
   const imgUrl = (f) => (f ? `/uploads/${f}` : null);
   const userCard = (u) => ({ id: u.id, username: u.username, name: u.name, avatar: imgUrl(u.avatar) });
   const rowUser = (r) => ({ id: r.uid, username: r.username, name: r.name, avatar: imgUrl(r.avatar) });
@@ -77,7 +91,23 @@ function createCore({ db, uploadDir, now }) {
     routes.push({ method, re, keys, handler, auth });
   };
 
-  return { db, q, now, uploadDir, sse, rateLimit, push, saveImage, imgUrl, userCard, rowUser, userByName, notify, routes, route };
+  // Simple gradient poster for videos uploaded without a captured frame.
+  function savePlaceholder() {
+    const pal = [['#f9ce34', '#ee2a7b', '#6228d7'], ['#00c6ff', '#0072ff', '#00e0a1'], ['#ff512f', '#dd2476', '#7b1fa2']][Math.floor(Math.random() * 3)];
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+<stop offset="0" stop-color="${pal[0]}"/><stop offset=".5" stop-color="${pal[1]}"/><stop offset="1" stop-color="${pal[2]}"/>
+</linearGradient></defs>
+<rect width="1080" height="1080" fill="url(#g)"/>
+<circle cx="540" cy="540" r="110" fill="rgba(255,255,255,.22)"/>
+<path d="M505 480l120 60-120 60z" fill="#fff"/>
+</svg>`;
+    const name = `ph-${crypto.randomBytes(8).toString('hex')}.svg`;
+    fs.writeFileSync(path.join(uploadDir, name), svg);
+    return name;
+  }
+
+  return { db, q, now, uploadDir, sse, rateLimit, push, saveImage, saveVideo, savePlaceholder, imgUrl, userCard, rowUser, userByName, notify, routes, route };
 }
 
 module.exports = { createCore };

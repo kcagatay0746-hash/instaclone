@@ -1,6 +1,7 @@
 // Single DM thread renderer, mounted inside the messages layout.
 import { API } from '../api.js';
 import { el, icon, avatar, fmt, spinner, toast, emptyState, navigate } from '../ui.js';
+import { startCall } from './call.js';
 
 export function createThreadView({ threadEl, wrap, onBack, onSent }) {
   let name = null;
@@ -32,7 +33,12 @@ export function createThreadView({ threadEl, wrap, onBack, onSent }) {
             bubbles.append(el('div', { class: 'bubble-time', text: fmt.time(msg.created_at) }));
           }
           lastTs = msg.created_at;
-          bubbles.append(el('div', { class: `bubble${msg.mine ? ' mine' : ''}`, text: msg.text }));
+          if (msg.kind === 'call') {
+            bubbles.append(el('div', { class: 'bubble call-bubble', 'data-call': String(msg.call_id || '') },
+              icon('phone', 15), el('span', { text: msg.text })));
+          } else {
+            bubbles.append(el('div', { class: `bubble${msg.mine ? ' mine' : ''}`, text: msg.text }));
+          }
         }
         requestAnimationFrame(() => { bubbles.scrollTop = bubbles.scrollHeight; });
       };
@@ -69,6 +75,14 @@ export function createThreadView({ threadEl, wrap, onBack, onSent }) {
         el('a', { href: `#/u/${res.user.username}` }, avatar(res.user, 40)),
         el('a', { class: 'who', href: `#/u/${res.user.username}` },
           el('b', { text: res.user.username }), el('span', { text: res.user.name })),
+        el('button', {
+          class: 'icon-btn', 'aria-label': 'Sesli ara', title: 'Sesli ara',
+          onclick: () => startCall(res.user.username, 'audio'),
+        }, icon('phone', 22)),
+        el('button', {
+          class: 'icon-btn', 'aria-label': 'Görüntülü ara', title: 'Görüntülü ara',
+          onclick: () => startCall(res.user.username, 'video'),
+        }, icon('video', 22)),
         el('button', {
           class: 'icon-btn', 'aria-label': 'Profili aç',
           onclick: () => navigate(`/u/${res.user.username}`),

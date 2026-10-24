@@ -3,6 +3,7 @@ import { API } from '../api.js';
 import { el, icon, avatar, fmt, linkify, toast, modal, spinner, confirmDialog, navigate, bus } from '../ui.js';
 import { state } from '../store.js';
 import { openMenu } from './menu.js';
+import { postMedia, viewCount } from './media.js';
 
 function commentRow(c, post, onChange) {
   const canDelete = c.mine || post.user.id === state.me.id;
@@ -30,7 +31,7 @@ function commentRow(c, post, onChange) {
 }
 
 export function postDetailNode(post, comments, { onClose, onDeleted } = {}) {
-  const img = el('img', { src: post.image, alt: post.caption || 'Gönderi', draggable: 'false' });
+  const mediaEl = postMedia(post);
   const commentsWrap = el('div', { class: 'side-comments' });
   const likeBtn = el('button', { class: 'icon-btn', 'aria-label': 'Beğen' });
   const saveBtn = el('button', { class: 'icon-btn', 'aria-label': 'Kaydet' });
@@ -144,7 +145,7 @@ export function postDetailNode(post, comments, { onClose, onDeleted } = {}) {
   });
 
   const node = el('div', { class: 'pd' },
-    el('div', { class: 'media' }, img),
+    el('div', { class: 'media' }, mediaEl),
     el('div', { class: 'side' },
       el('header', { class: 'side-head' },
         el('a', { href: `#/u/${post.user.username}` }, avatar(post.user, 34)),
@@ -160,6 +161,7 @@ export function postDetailNode(post, comments, { onClose, onDeleted } = {}) {
           el('div', { class: 'grow' }),
           saveBtn),
         likesEl,
+        post.kind === 'video' ? el('div', { class: 'post-views', text: viewCount(post) }) : null,
         timeEl,
         form)));
 

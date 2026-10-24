@@ -29,6 +29,18 @@ module.exports = function feedRoutes(core) {
     };
   });
 
+  // Full-screen Reels: videos first, then popular photos (discovery feed).
+  route('GET', '/api/reels', (ctx) => {
+    const offset = Math.max(0, Number(ctx.query.get('offset')) || 0);
+    const rows = q(`${POST_SQL}
+      ORDER BY CASE WHEN p.kind = 'video' THEN 0 ELSE 1 END, p.id DESC
+      LIMIT :lim OFFSET :off`).all({ me: ctx.user.id, lim: 7, off: offset });
+    return {
+      posts: rows.slice(0, 6).map((r) => shapePost(r, ctx.user.id)),
+      next: rows.length > 6 ? offset + 6 : null,
+    };
+  });
+
   route('GET', '/api/saved', (ctx) => {
     const rows = q(`${POST_SQL} WHERE p.id IN (SELECT post_id FROM saves WHERE user_id = :me)
       ORDER BY (SELECT created_at FROM saves s WHERE s.post_id = p.id AND s.user_id = :me) DESC
@@ -60,6 +72,15 @@ module.exports = function feedRoutes(core) {
     const rows = q(`${POST_SQL} WHERE p.id IN (SELECT post_id FROM hashtags WHERE tag = :tag)
       ORDER BY p.id DESC LIMIT 60`).all({ me: ctx.user.id, tag });
     return { tag, count: rows.length, posts: rows.map((r) => shapePost(r, ctx.user.id)) };
+  });
+
+  // People who already follow me but I don't follow back (quick "add" list).
+  route('GET', '/api/people/follows-me', (ctx) => {
+    const rows = q(`SELECT u.* FROM follows f JOIN users u ON u.id = f.follower_id
+      WHERE f.followee_id = :me
+        AND u.id NOT IN (SELECT followee_id FROM follows WHERE follower_id = :me)
+      ORDER BY f.created_at DESC LIMIT 20`).all({ me: ctx.user.id });
+    return { users: rows.map(userCard) };
   });
 
   route('GET', '/api/suggestions', (ctx) => {

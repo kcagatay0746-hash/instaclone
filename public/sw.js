@@ -1,5 +1,5 @@
 /* Service worker: installable app + offline shell (no dependencies). */
-const VERSION = 'instaclone-v1';
+const VERSION = 'instaclone-v2';
 const SHELL = [
   '/',
   '/index.html',
@@ -17,11 +17,16 @@ const SHELL = [
   '/css/views2.css',
   '/css/views3.css',
   '/css/views4.css',
+  '/css/reels.css',
+  '/css/calls.css',
   '/js/app.js',
   '/js/ui.js',
   '/js/api.js',
   '/js/store.js',
   '/js/shell.js',
+  '/js/components/media.js',
+  '/js/components/call.js',
+  '/js/views/reels.js',
 ];
 
 self.addEventListener('install', (event) => {

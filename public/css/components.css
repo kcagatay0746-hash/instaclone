@@ -30,7 +30,7 @@
 .post-head .who b { font-size: 13.5px; display: block; }
 .post-head .who span { font-size: 11.5px; color: var(--muted); display: block; }
 .post-media { position: relative; background: #000; touch-action: pan-y; }
-.post-media img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; user-select: none; }
+.post-media img, .post-media video { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; user-select: none; background: #000; }
 .post-media .heart-burst {
   position: absolute; inset: 0; display: grid; place-items: center; color: #fff;
   pointer-events: none; opacity: 0; transform: scale(.3);
@@ -49,6 +49,13 @@
 @keyframes like { 40% { transform: scale(1.25); } }
 .post-body { padding: 4px 14px 14px; display: grid; gap: 5px; }
 .post-likes { font-weight: 700; font-size: 13.5px; }
+.post-views { font-size: 11.5px; color: var(--muted); }
+.video-badge {
+  position: absolute; top: 8px; right: 8px; color: #fff; background: rgba(0, 0, 0, .45);
+  border-radius: 999px; padding: 4px; display: inline-flex; z-index: 2;
+}
+.play-badge { display: inline-flex; }
+.grid-item .video-badge .ic { filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .4)); }
 .post-caption { font-size: 13.8px; overflow-wrap: anywhere; }
 .post-caption b { margin-right: 6px; }
 .post-comments { display: grid; gap: 4px; font-size: 13.5px; }

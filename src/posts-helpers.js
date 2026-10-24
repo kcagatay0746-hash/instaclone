@@ -2,12 +2,13 @@
 const { HttpError } = require('./util');
 
 const POST_SQL = `
-  SELECT p.id, p.image, p.caption, p.location, p.created_at,
+  SELECT p.id, p.image, p.caption, p.location, p.created_at, p.kind, p.video, p.views,
     u.id AS uid, u.username, u.name, u.avatar,
     (SELECT COUNT(*) FROM likes l WHERE l.post_id = p.id) AS likes,
     (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) AS comments,
     EXISTS(SELECT 1 FROM likes l WHERE l.post_id = p.id AND l.user_id = :me) AS liked,
-    EXISTS(SELECT 1 FROM saves s WHERE s.post_id = p.id AND s.user_id = :me) AS saved
+    EXISTS(SELECT 1 FROM saves s WHERE s.post_id = p.id AND s.user_id = :me) AS saved,
+    EXISTS(SELECT 1 FROM post_views v WHERE v.post_id = p.id AND v.user_id = :me) AS viewed
   FROM posts p JOIN users u ON u.id = p.user_id`;
 
 // Builds the post serializer pools shared by feed & post route modules.
@@ -27,6 +28,10 @@ function createPostHelpers(core) {
   const shapePost = (r, me = 0) => ({
     id: r.id,
     image: imgUrl(r.image),
+    video: imgUrl(r.video),
+    kind: r.kind || 'photo',
+    views: r.views || 0,
+    viewed: !!r.viewed,
     caption: r.caption,
     location: r.location,
     created_at: r.created_at,

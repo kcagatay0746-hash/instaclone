@@ -34,6 +34,17 @@ function sniffImage(buf) {
   return null;
 }
 
+// Detects mp4 / webm / quicktime containers by their magic bytes.
+function sniffVideo(buf) {
+  if (buf.length > 12 && buf.subarray(4, 8).toString('latin1') === 'ftyp') {
+    const brand = buf.subarray(8, 12).toString('latin1');
+    return brand === 'qt  ' ? 'mov' : 'mp4';
+  }
+  if (buf.length > 4 && buf[0] === 0x1a && buf[1] === 0x45 && buf[2] === 0xdf && buf[3] === 0xa3) return 'webm';
+  if (buf.length > 4 && buf.subarray(0, 4).toString('latin1') === 'OggS') return 'ogg';
+  return null;
+}
+
 const clampStr = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const likeEscape = (s) => s.replace(/[\\%_]/g, (c) => '\\' + c);
 const extractTags = (text) =>
@@ -41,4 +52,7 @@ const extractTags = (text) =>
 const extractMentions = (text) =>
   [...new Set([...text.matchAll(/@([A-Za-z0-9_.]{1,30})/g)].map((m) => m[1].toLowerCase()))].slice(0, 10);
 
-module.exports = { HttpError, sha256, hashPassword, verifyPassword, sniffImage, clampStr, likeEscape, extractTags, extractMentions };
+module.exports = {
+  HttpError, sha256, hashPassword, verifyPassword, sniffImage, sniffVideo,
+  clampStr, likeEscape, extractTags, extractMentions,
+};

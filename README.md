@@ -87,8 +87,33 @@ service worker sayesinde çevrimdışıyken de kabuk + son görüntülenen içer
 - **Beğeni, yorum, kaydetme** – yorum silme yetkisi (yorum sahibi veya gönderi sahibi).
 - **Bildirimler** – beğeni, yorum, takip, bahsetme; okundu işaretleme ve canlı rozetler.
 - **Doğrudan mesajlar** – konuşma listesi, okundu bilgisi, canlı (SSE) mesaj akışı.
+- **Reels / video** – MP4/WebM yükleme (en fazla 25 MB, 2 dk), videodan otomatik kapak
+  karesi, tam ekran kaydırmalı Reels akışı (otomatik oynatma + ses düğmesi), görüntülenme
+  sayacı, profil ve ızgaralarda ▶️ video rozeti.
+- **Sesli & görüntülü arama** – gerçek WebRTC görüşmesi (medya uçtan uca akar, sunucu yalnızca
+  SDP sinyalleşmesini yapar), gelen arama ekranı, yanıtla/reddet, mikrofon ve kamera kapatma,
+  süre sayacı, arama geçmişi sohbet içinde kayıt olarak görünür.
+- **Kişi ekle** – “Seni takip ediyor” listesinden tek dokunuşla geri takip, öneriler,
+  kullanıcı arama.
 - **Hashtag sayfaları**, **kaydedilenler**, **koyu/açık tema**, **klavye kısayolları**,
   mobil alt menü ve masaüstü kenar çubuğu.
+
+### Arama nasıl denenir?
+
+Sesli/görüntülü arama tarayıcıların kamera-mikrofon iznini ve `localhost` (veya HTTPS)
+üzerinden açılmasını gerektirir.
+
+1. Uygulamayı aç (`http://localhost:3000`).
+2. Aynı bilgisayarda **iki ayrı tarayıcı penceresi/sekmesi** aç, birinde `ayse`, diğerinde
+   `mehmet` ile giriş yap (ya da iki farklı profil).
+3. Mesajlar → kişiyi seç → üstteki **📞** veya **🎥** düğmesine bas. Diğer pencerede gelen
+   arama ekranı çıkar; **Yanıtla** dediğinde görüşme başlar.
+
+Notlar:
+- Aynı makinede/LAN’da çalışır. Farklı ağlardaki kullanıcılar için TURN sunucusu gerekir
+  (`components/call.js` içindeki `RTC_CONFIG`e eklenebilir).
+- Kamera/mikrofon izni reddedilirse görüşme başlamaz; tarayıcı adres çubuğundan izin ver.
+- Arama sırasında sunucu kapalıysa zil sesi/sinyal iletilemez.
 
 ## Yapı
 
@@ -124,6 +149,9 @@ test/                  API entegrasyon testleri + DOM tabanlı arayüz testleri
 | PATCH | `/api/me` | ad, biyografi, avatar |
 | GET | `/api/feed?before=` | akış (imleç tabanlı) |
 | GET | `/api/explore?offset=` | keşfet |
+| GET | `/api/reels?offset=` | tam ekran Reels akışı |
+| POST | `/api/posts/:id/view` | tekil görüntülenme sayacı |
+| GET | `/api/people/follows-me` | seni takip edenler (geri takip) |
 | GET | `/api/saved` | kaydedilenler |
 | GET | `/api/search?q=` | kullanıcı + hashtag arama |
 | GET | `/api/tags/:tag` | hashtag gönderileri |
@@ -137,7 +165,9 @@ test/                  API entegrasyon testleri + DOM tabanlı arayüz testleri
 | GET/POST | `/api/stories` · `/api/stories/:id/view` · DELETE `/api/stories/:id` | hikayeler |
 | GET/POST | `/api/notifications` · `/api/notifications/read` | bildirimler |
 | GET/POST | `/api/messages[/:username]` | DM |
-| GET | `/api/events` | SSE: canlı bildirim + mesaj |
+| GET | `/api/events` | SSE: canlı bildirim + mesaj + arama sinyalleri |
+| POST | `/api/calls` · `/:id/answer` · `/:id/decline` · `/:id/end` | WebRTC sinyalleşmesi |
+| GET | `/api/calls/history` | arama geçmişi |
 
 ## Testler
 
@@ -146,9 +176,12 @@ npm test        # API entegrasyon testleri + arayüz (DOM) testleri
 ```
 
 - `test/api.test.js` gerçek sunucuyu geçici bir veritabanıyla ayağa kaldırıp tüm akışları
-  dener (giriş, gönderi, beğeni, yorum, takip, hikaye, DM, arama, güvenlik kontrolleri).
+  dener: giriş, gönderi, beğeni, yorum, takip, hikaye, DM, **video yükleme**, **Reels**,
+  **görüntülenme sayacı**, **HTTP Range (video akışı)**, **arama sinyalleşmesi**
+  (teklif/yanıt/reddetme/meşgul) ve güvenlik kontrolleri.
 - `test/ui.test.mjs` tarayıcısız bir DOM simülatöründe gerçek SPA'yı çalıştırır ve tüm ana
-  rotaların hata vermeden render edildiğini doğrular.
+  rotaların (Reels dahil) hata vermeden render edildiğini, video oynatıcıların, arama
+  düğmelerinin ve sohbet içi arama kayıtlarının oluştuğunu doğrular.
 
 ## Yapılandırma
 

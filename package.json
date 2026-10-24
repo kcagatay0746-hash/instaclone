@@ -1,6 +1,6 @@
 {
   "name": "instaclone",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Instagram-style social app with zero dependencies (Node 22.13+/24, node:sqlite)",
   "private": true,
   "main": "server.js",

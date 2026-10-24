@@ -67,6 +67,21 @@ export function connectEvents() {
     bus.emit('dm:incoming', data);
     if (!location.hash.includes('/messages') && !location.hash.includes('/u/')) toast(`${data.fromName || data.from}: ${data.message ? data.message.text : 'yeni mesaj'}`);
   });
+  // WebRTC signaling + call state changes
+  for (const [event, type] of [
+    ['call:incoming', 'incoming'],
+    ['call:answered', 'answered'],
+    ['call:declined', 'declined'],
+    ['call:ended', 'ended'],
+  ]) {
+    events.addEventListener(event, (e) => {
+      let data = {};
+      try { data = JSON.parse(e.data); } catch { /* ignore */ }
+      bus.emit('call:event', { type, data });
+      if (type === 'ended' || type === 'declined') bus.emit('dm:refresh');
+    });
+  }
+
   events.onerror = () => { /* browser auto-reconnects */ };
 }
 

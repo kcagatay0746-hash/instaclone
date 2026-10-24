@@ -34,9 +34,52 @@ function matchCompound(el, compound) {
   return true;
 }
 
+// Splits a selector into tokens, keeping quoted attribute values intact
+// (e.g. [aria-label="Sesli ara"] must stay a single token).
+function tokenize(part) {
+  const tokens = [];
+  let cur = '';
+  let inBracket = false;
+  let quote = null;
+  for (const ch of part.trim()) {
+    if (inBracket) {
+      cur += ch;
+      if (quote) {
+        if (ch === quote) quote = null;
+      } else if (ch === '"' || ch === "'") {
+        quote = ch;
+      } else if (ch === ']') {
+        inBracket = false;
+      }
+      continue;
+    }
+    if (ch === '[') {
+      inBracket = true;
+      cur += ch;
+      continue;
+    }
+    if (ch === '>') {
+      if (cur.trim()) tokens.push(cur.trim());
+      cur = '';
+      tokens.push('>');
+      continue;
+    }
+    if (/\s/.test(ch)) {
+      if (cur.trim()) {
+        tokens.push(cur.trim());
+        cur = '';
+      }
+      continue;
+    }
+    cur += ch;
+  }
+  if (cur.trim()) tokens.push(cur.trim());
+  return tokens;
+}
+
 function parseSelector(sel) {
   return sel.split(',').map((part) => {
-    const tokens = part.trim().split(/\s*(>)\s*|\s+/).filter(Boolean);
+    const tokens = tokenize(part);
     const steps = [];
     let combinator = null;
     for (const t of tokens) {

@@ -25,9 +25,18 @@ CREATE TABLE IF NOT EXISTS posts (
   image TEXT NOT NULL,
   caption TEXT NOT NULL DEFAULT '',
   location TEXT NOT NULL DEFAULT '',
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'photo',
+  video TEXT,
+  views INTEGER NOT NULL DEFAULT 0
 );
 CREATE INDEX IF NOT EXISTS idx_posts_user ON posts(user_id, id DESC);
+CREATE TABLE IF NOT EXISTS post_views (
+  post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at INTEGER NOT NULL,
+  PRIMARY KEY (post_id, user_id)
+);
 CREATE TABLE IF NOT EXISTS hashtags (
   post_id INTEGER NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
   tag TEXT NOT NULL,
@@ -90,16 +99,48 @@ CREATE TABLE IF NOT EXISTS messages (
   to_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   text TEXT NOT NULL,
   read INTEGER NOT NULL DEFAULT 0,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'text',
+  call_id INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_msg_pair ON messages(from_id, to_id, id);
 CREATE INDEX IF NOT EXISTS idx_msg_to ON messages(to_id, read);
+CREATE TABLE IF NOT EXISTS calls (
+  id INTEGER PRIMARY KEY,
+  caller_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  callee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL DEFAULT 'audio',
+  status TEXT NOT NULL DEFAULT 'ringing',
+  offer TEXT,
+  answer TEXT,
+  created_at INTEGER NOT NULL,
+  answered_at INTEGER,
+  ended_at INTEGER
+);
+CREATE INDEX IF NOT EXISTS idx_calls_pair ON calls(caller_id, callee_id, id DESC);
 `;
+
+// Adds columns/indexes to databases created by older versions.
+function migrate(db) {
+  const columns = (table) => db.prepare(`PRAGMA table_info(${table})`).all().map((r) => r.name);
+  const add = (table, col, ddl) => {
+    try {
+      if (!columns(table).includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+    } catch { /* table might not exist yet */ }
+  };
+  add('posts', 'kind', "kind TEXT NOT NULL DEFAULT 'photo'");
+  add('posts', 'video', 'video TEXT');
+  add('posts', 'views', 'views INTEGER NOT NULL DEFAULT 0');
+  add('messages', 'kind', "kind TEXT NOT NULL DEFAULT 'text'");
+  add('messages', 'call_id', 'call_id INTEGER');
+  db.exec('CREATE INDEX IF NOT EXISTS idx_posts_kind ON posts(kind, id DESC)');
+}
 
 function openDb(path) {
   const db = new DatabaseSync(path);
   db.exec(SCHEMA);
+  migrate(db);
   return db;
 }
 
-module.exports = { openDb };
+module.exports = { openDb, migrate, SCHEMA };

@@ -37,14 +37,23 @@ test('rotalar çalışır: keşfet, profil, bildirimler, mesajlar, etiket, kayde
 
   await go('#/messages/mehmet');
   assert.ok(document.querySelector('.bubbles'));
-  assert.equal(document.querySelectorAll('.bubble').length, 2);
+  assert.equal(document.querySelectorAll('.bubble').length, 3);
+  assert.ok(document.querySelector('.call-bubble'), 'arama kaydı balonu yok');
   assert.ok(document.querySelector('.composer input'));
+  assert.ok(document.querySelector('[aria-label="Sesli ara"]'), 'sesli arama düğmesi yok');
+  assert.ok(document.querySelector('[aria-label="Görüntülü ara"]'), 'görüntülü arama düğmesi yok');
 
   await go('#/tag/istanbul');
   assert.match(document.querySelector('.tag-hero').textContent, /#istanbul/);
 
   await go('#/saved');
   assert.ok(document.querySelectorAll('.grid-item').length >= 1);
+
+  await go('#/reels');
+  assert.ok(document.querySelector('.reels'), 'reels konteyneri yok');
+  assert.ok(document.querySelectorAll('.reel').length >= 2, 'reels kartları yok');
+  assert.ok(document.querySelector('.reel video'), 'video oynatıcı yok');
+  assert.match(document.querySelector('.reel').textContent, /Reels/);
 
   await go('#/create');
   assert.ok(document.querySelector('.dropzone'));

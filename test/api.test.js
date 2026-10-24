@@ -214,6 +214,121 @@ test('kayıt olma, doğrulama ve çıkış', async () => {
   const me = await req('/api/me');
   assert.equal(me.json.user, null);
 });
+const MP4 = 'data:video/mp4;base64,' + Buffer.concat([
+  Buffer.from([0, 0, 0, 0x18]),
+  Buffer.from('ftypmp42', 'latin1'),
+  Buffer.from([0, 0, 0, 0]),
+  Buffer.from('mp42isom', 'latin1'),
+  Buffer.from('fake-video-payload-for-range-tests', 'latin1'),
+]).toString('base64');
+
+async function sessionFor(username, password = 'demo1234') {
+  const res = await fetch(`${BASE}/api/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
+  assert.equal(res.status, 200);
+  return res.headers.get('set-cookie').split(';')[0];
+}
+
+test('video gönderisi, reels akışı, görüntüleme sayacı ve Range desteği', async () => {
+  await login('zeynep');
+  const created = await req('/api/posts', {
+    method: 'POST',
+    body: { video: MP4, poster: PNG, caption: 'İlk reel #video', location: 'Stüdyo' },
+  });
+  assert.equal(created.status, 201);
+  const post = created.json.post;
+  assert.equal(post.kind, 'video');
+  assert.ok(post.video && post.video.endsWith('.mp4'), `video url: ${post.video}`);
+  assert.ok(post.image && post.image.endsWith('.png'));
+
+  const reels = await req('/api/reels');
+  assert.equal(reels.status, 200);
+  assert.ok(reels.json.posts.some((p) => p.id === post.id));
+
+  const first = await req(`/api/posts/${post.id}/view`, { method: 'POST', body: {} });
+  assert.equal(first.json.views, 1);
+  assert.equal(first.json.counted, true);
+  const second = await req(`/api/posts/${post.id}/view`, { method: 'POST', body: {} });
+  assert.equal(second.json.views, 1);
+  assert.equal(second.json.counted, false);
+
+  const ranged = await fetch(BASE + post.video, { headers: { Range: 'bytes=0-9' } });
+  assert.equal(ranged.status, 206);
+  assert.match(ranged.headers.get('content-range'), /^bytes 0-9\/\d+$/);
+  const body = Buffer.from(await ranged.arrayBuffer());
+  assert.equal(body.length, 10);
+  assert.equal(body.subarray(4, 8).toString('latin1'), 'ftyp');
+
+  const del = await req(`/api/posts/${post.id}`, { method: 'DELETE', body: {} });
+  assert.equal(del.status, 200);
+});
+
+test('geçersiz video ve poster yüklemeleri reddedilir', async () => {
+  await login('zeynep');
+  const badType = await req('/api/posts', { method: 'POST', body: { video: 'data:video/mp4;base64,aGFsbw==', poster: PNG } });
+  assert.equal(badType.status, 400);
+  const noMedia = await req('/api/posts', { method: 'POST', body: { caption: 'medyasız' } });
+  assert.equal(noMedia.status, 400);
+});
+
+test('arama sinyalleşmesi: teklif, yanıt, meşgul ve bitirme', async () => {
+  const ayseCk = await sessionFor('ayse');
+  const mehmetCk = await sessionFor('mehmet');
+  const offer = JSON.stringify({ type: 'offer', sdp: 'v=0\r\no=- 1 1 IN IP4 127.0.0.1\r\ns=-\r\n' });
+
+  const started = await req('/api/calls', { method: 'POST', ck: ayseCk, body: { username: 'mehmet', kind: 'video', offer } });
+  assert.equal(started.status, 201);
+  const callId = started.json.call.id;
+  assert.equal(started.json.call.kind, 'video');
+
+  const busy = await req('/api/calls', { method: 'POST', ck: mehmetCk, body: { username: 'can', kind: 'audio', offer } });
+  assert.equal(busy.status, 409);
+
+  const wrongAnswer = await req(`/api/calls/${callId}/answer`, { method: 'POST', ck: ayseCk, body: { answer: offer } });
+  assert.equal(wrongAnswer.status, 403);
+
+  const answered = await req(`/api/calls/${callId}/answer`, { method: 'POST', ck: mehmetCk, body: { answer: offer.replace('offer', 'answer') } });
+  assert.equal(answered.status, 200);
+  assert.equal(answered.json.call.status, 'active');
+
+  const ended = await req(`/api/calls/${callId}/end`, { method: 'POST', ck: ayseCk, body: {} });
+  assert.equal(ended.status, 200);
+  assert.equal(ended.json.call.status, 'ended');
+
+  const history = await req('/api/calls/history', { ck: ayseCk });
+  assert.ok(history.json.calls.some((c) => c.id === callId && c.direction === 'outgoing'));
+  assert.ok(history.json.calls.some((c) => c.id === callId));
+
+  // the call is recorded in the DM thread for both sides
+  const thread = await req('/api/messages/mehmet', { ck: ayseCk });
+  const callMsg = thread.json.messages.find((m) => m.kind === 'call' && m.call_id === callId);
+  assert.ok(callMsg, 'DM geçmişinde arama kaydı yok');
+  assert.match(callMsg.text, /Görüntülü arama/);
+});
+
+test('arama: kendini arayamazsın, cevaplanmayan arama cevapsız kalır', async () => {
+  const canCk = await sessionFor('can');
+  const elifCk = await sessionFor('elif');
+  const offer = JSON.stringify({ type: 'offer', sdp: 'v=0\r\ns=-\r\n' });
+
+  const self = await req('/api/calls', { method: 'POST', ck: canCk, body: { username: 'can', kind: 'audio', offer } });
+  assert.equal(self.status, 400);
+
+  const bad = await req('/api/calls', { method: 'POST', ck: canCk, body: { username: 'elif', kind: 'audio', offer: 'x' } });
+  assert.equal(bad.status, 400);
+
+  const started = await req('/api/calls', { method: 'POST', ck: canCk, body: { username: 'elif', kind: 'audio', offer } });
+  assert.equal(started.status, 201);
+  const declined = await req(`/api/calls/${started.json.call.id}/decline`, { method: 'POST', ck: elifCk, body: {} });
+  assert.equal(declined.status, 200);
+  assert.equal(declined.json.call.status, 'declined');
+  assert.match(declined.json.summary, /reddedildi/);
+});
+
+
 
 test('statik dosyalar, SPA fallback ve yol geçişi koruması', async () => {
   const home = await req('/', { raw: true });

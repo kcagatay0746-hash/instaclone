@@ -10,19 +10,25 @@ const MIME = {
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.gif': 'image/gif',
   '.ico': 'image/x-icon',
   '.json': 'application/json; charset=utf-8',
   '.webmanifest': 'application/manifest+json',
   '.txt': 'text/plain; charset=utf-8',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
+  '.ogg': 'video/ogg',
 };
 
 const SEC_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'same-origin',
   'X-Frame-Options': 'DENY',
-  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
+  // calls need the camera/mic; everything else stays locked down
+  'Permissions-Policy': 'geolocation=(), camera=(self), microphone=(self)',
 };
 
 function send(res, status, body) {
@@ -81,7 +87,48 @@ function serveFile(res, base, rel, extra = {}, req = null, head = false) {
     res.end();
     return true;
   }
-  res.writeHead(200, { 'Content-Type': type, 'Content-Length': st.size, ETag: etag, ...SEC_HEADERS, ...extra });
+
+  // Byte-range support so <video> can seek/stream properly.
+  const range = req && req.headers.range;
+  if (range && /^bytes=\d*-\d*$/.test(range)) {
+    const [startRaw, endRaw] = range.replace('bytes=', '').split('-');
+    let start = startRaw ? Number(startRaw) : 0;
+    let end = endRaw ? Number(endRaw) : st.size - 1;
+    if (!startRaw && endRaw) {
+      start = Math.max(0, st.size - Number(endRaw));
+      end = st.size - 1;
+    }
+    if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= st.size) {
+      res.writeHead(416, { 'Content-Range': `bytes */${st.size}`, ...SEC_HEADERS });
+      res.end();
+      return true;
+    }
+    end = Math.min(end, st.size - 1);
+    res.writeHead(206, {
+      'Content-Type': type,
+      'Content-Length': end - start + 1,
+      'Content-Range': `bytes ${start}-${end}/${st.size}`,
+      'Accept-Ranges': 'bytes',
+      ETag: etag,
+      ...SEC_HEADERS,
+      ...extra,
+    });
+    if (head) {
+      res.end();
+      return true;
+    }
+    fs.createReadStream(full, { start, end }).pipe(res);
+    return true;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': type,
+    'Content-Length': st.size,
+    'Accept-Ranges': 'bytes',
+    ETag: etag,
+    ...SEC_HEADERS,
+    ...extra,
+  });
   if (head) {
     res.end();
     return true;

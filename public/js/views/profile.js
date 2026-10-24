@@ -5,6 +5,7 @@ import { state } from '../store.js';
 import { postGrid } from '../components/grid.js';
 import { followRow } from '../components/user-row.js';
 import { openEditProfile } from '../components/edit-profile.js';
+import { startCall } from '../components/call.js';
 
 async function openList(title, username, kind) {
   const body = el('div', { class: 'follow-list' }, el('div', { class: 'load-more' }, spinner()));
@@ -60,7 +61,15 @@ export async function profileView(username) {
         followBtn.disabled = false;
       }
     });
-    actions.append(followBtn, messageBtn());
+    actions.append(followBtn, messageBtn(),
+      el('button', {
+        class: 'icon-btn', 'aria-label': 'Sesli ara', title: 'Sesli ara',
+        onclick: () => startCall(user.username, 'audio'),
+      }, icon('phone', 22)),
+      el('button', {
+        class: 'icon-btn', 'aria-label': 'Görüntülü ara', title: 'Görüntülü ara',
+        onclick: () => startCall(user.username, 'video'),
+      }, icon('video', 22)));
   }
 
   const header = el('header', { class: 'profile-head' },
@@ -82,25 +91,34 @@ export async function profileView(username) {
   const gridWrap = el('div', {});
   const tabs = el('div', { class: 'tabs' });
   const tabPosts = el('button', { class: 'tab active' }, icon('grid', 16), 'Gönderiler');
+  const tabReels = el('button', { class: 'tab' }, icon('play', 16), 'Reels');
   const tabSaved = el('button', { class: 'tab' }, icon('bookmark', 16), 'Kaydedilenler');
-  tabs.append(tabPosts);
+  tabs.append(tabPosts, tabReels);
   if (isMe) tabs.append(tabSaved);
 
   const renderTab = async (which) => {
     tabPosts.classList.toggle('active', which === 'posts');
+    tabReels.classList.toggle('active', which === 'reels');
     tabSaved.classList.toggle('active', which === 'saved');
     gridWrap.replaceChildren(el('div', { class: 'load-more' }, spinner()));
     try {
-      const list = which === 'posts' ? posts : (await API.saved()).posts;
+      let list;
+      if (which === 'posts') list = posts;
+      else if (which === 'reels') list = posts.filter((p) => p.kind === 'video');
+      else list = (await API.saved()).posts;
+      const titles = {
+        posts: ['Henüz gönderi yok', isMe ? 'İlk gönderini paylaşarak başla.' : `${user.username} henüz bir şey paylaşmadı.`],
+        reels: ['Henüz video yok', isMe ? 'Video yükleyerek Reels akışında görün.' : `${user.username} henüz video paylaşmadı.`],
+        saved: ['Henüz kaydedilen yok', 'Gönderileri kaydederek burada biriktir.'],
+      };
+      const [title, text] = titles[which];
       gridWrap.replaceChildren(list.length
         ? postGrid(list)
         : el('div', { class: 'card pad' }, emptyState(
-          which === 'posts' ? 'camera' : 'bookmark',
-          which === 'posts' ? 'Henüz gönderi yok' : 'Henüz kaydedilen yok',
-          which === 'posts'
-            ? (isMe ? 'İlk gönderini paylaşarak başla.' : `${user.username} henüz bir şey paylaşmadı.`)
-            : 'Gönderileri kaydederek burada biriktir.',
-          which === 'posts' && isMe
+          which === 'reels' ? 'play' : which === 'posts' ? 'camera' : 'bookmark',
+          title,
+          text,
+          which !== 'saved' && isMe
             ? el('button', { class: 'btn primary', onclick: () => navigate('/create') }, 'Gönderi oluştur')
             : null)));
     } catch (err) {
@@ -108,6 +126,7 @@ export async function profileView(username) {
     }
   };
   tabPosts.addEventListener('click', () => renderTab('posts'));
+  tabReels.addEventListener('click', () => renderTab('reels'));
   tabSaved.addEventListener('click', () => renderTab('saved'));
 
   const card = el('div', { class: 'card', style: { overflow: 'hidden' } },

@@ -5,16 +5,21 @@ const { HttpError, clampStr, extractTags, extractMentions } = require('./util');
 const { createPostHelpers } = require('./posts-helpers');
 
 module.exports = function postRoutes(core) {
-  const { q, now, route, rateLimit, saveImage, userCard, notify, uploadDir } = core;
+  const { q, now, route, rateLimit, saveImage, saveVideo, savePlaceholder, userCard, notify, uploadDir } = core;
   const { getPost } = createPostHelpers(core);
 
   route('POST', '/api/posts', (ctx) => {
     rateLimit(`post:${ctx.user.id}`, 60, 60 * 60 * 1000);
     const caption = clampStr(ctx.body.caption, 2200);
     const location = clampStr(ctx.body.location, 100);
-    const image = saveImage(ctx.body.image);
-    const r = q('INSERT INTO posts (user_id, image, caption, location, created_at) VALUES (?,?,?,?,?)')
-      .run(ctx.user.id, image, caption, location, now());
+    const video = ctx.body.video ? saveVideo(ctx.body.video) : null;
+    // image doubles as the poster frame for videos
+    const image = video
+      ? (ctx.body.poster ? saveImage(ctx.body.poster) : savePlaceholder())
+      : saveImage(ctx.body.image);
+    const kind = video ? 'video' : 'photo';
+    const r = q('INSERT INTO posts (user_id, image, caption, location, created_at, kind, video) VALUES (?,?,?,?,?,?,?)')
+      .run(ctx.user.id, image, caption, location, now(), kind, video);
     const id = Number(r.lastInsertRowid);
     for (const t of extractTags(caption)) {
       q('INSERT OR IGNORE INTO hashtags (post_id, tag) VALUES (?,?)').run(id, t);
@@ -34,8 +39,21 @@ module.exports = function postRoutes(core) {
     if (!p) throw new HttpError(404, 'Gönderi bulunamadı.');
     if (p.user_id !== ctx.user.id) throw new HttpError(403, 'Bu gönderiyi silemezsiniz.');
     q('DELETE FROM posts WHERE id = ?').run(p.id);
-    fs.rm(path.join(uploadDir, p.image), { force: true }, () => {});
+    for (const file of [p.image, p.video]) {
+      if (file) fs.rm(path.join(uploadDir, file), { force: true }, () => {});
+    }
     return { ok: true };
+  });
+
+  // Counts a unique view per user (used by reels + video posts).
+  route('POST', '/api/posts/:id/view', (ctx) => {
+    const post = q('SELECT id, user_id FROM posts WHERE id = ?').get(Number(ctx.params.id));
+    if (!post) throw new HttpError(404, 'Gönderi bulunamadı.');
+    const r = q('INSERT OR IGNORE INTO post_views (post_id, user_id, created_at) VALUES (?,?,?)')
+      .run(post.id, ctx.user.id, now());
+    if (r.changes) q('UPDATE posts SET views = views + 1 WHERE id = ?').run(post.id);
+    const views = q('SELECT views FROM posts WHERE id = ?').get(post.id).views;
+    return { views, counted: !!r.changes };
   });
 
   const toggle = (table, on) => (ctx) => {
